@@ -1,0 +1,310 @@
+# Quy tắc thu đổi – chuyển từ PL A2 (hiệu lực 30/09/2026) và Excel mapping.
+# Token đặc biệt:
+#   NL          = theo giá nguyên liệu, theo chế độ (Thu: giá mua vào; Đổi: giá bán ra)
+#   NL_THU      = luôn theo giá THU VÀO (văn bản ghi "Thu theo giá NL" cho cả thu và đổi)
+#   KHONG       = không thu mua / không thu lại
+#   CAM_KET_HD  = theo tỷ lệ cam kết trên HĐ / chính sách trích lục theo HĐ
+#   CAN_DUYET   = chỉ áp dụng khi được duyệt theo tờ trình
+#   REF_*       = tra phụ lục khác, app không tự tính
+# Số thập phân = tỷ lệ (0.8 = 80%).
+# Ngày HĐ: "trước 05/01/2026" = to 2026-01-04; "từ 05/01/2026" = from 2026-01-05.
+
+version: "A2-2026-09-30"
+effective_from: "2026-09-30"
+
+rules:
+  # ---------------- Nhóm thanh toán 1 ----------------
+  - id: G1-VANG-MIENG
+    payment_group: 1
+    label: "Vàng miếng, nhẫn khoen, vàng Phúc Lộc Tài, vàng Kim Bảo"
+    source: "Excel mapping – nhóm 1 (Giá thu vào)"
+    thu: NL_THU
+    doi: NL_THU
+
+  # ---------------- Nhóm thanh toán 2 (A2 nhóm 1) ----------------
+  - id: G2-KC-A
+    payment_group: 2
+    label: "TS kim cương – tròn IF/FL/VVS1/VS1 ≤4ly; tròn VVS2…KQT mọi cỡ; KC màu"
+    source: "A2 mục 2.3 – TS kim cương (không gồm Style)"
+    thu: 0.80
+    doi: 0.90
+    combo_doi: 0.85
+    notes: ["Đổi sang Combo mới (TS vỏ + KCR) tổng giá trị ≥ hàng cũ: tỷ lệ đổi 85%."]
+  - id: G2-KC-B
+    payment_group: 2
+    label: "TS kim cương – KC trắng Fancy, cỡ lớn nhất ≤3,5ly"
+    source: "A2 mục 2.3 – TS kim cương"
+    thu: 0.80
+    doi: 0.90
+  - id: G2-KC-C
+    payment_group: 2
+    label: "TS kim cương – KC trắng Fancy, cỡ lớn nhất ≥3,5ly"
+    source: "A2 mục 2.3 – TS kim cương"
+    thu: 0.75
+    doi: 0.85
+  - id: G2-KC-D
+    payment_group: 2
+    kind: split_shell_stone
+    label: "TS kim cương – tròn IF/FL/VVS1/VS1, cỡ lớn nhất ≥4ly (tách vỏ và viên)"
+    source: "A2 mục 2.3 – TS kim cương; ví dụ minh họa trong A2"
+    shell_thu: 0.80
+    shell_doi: 0.85
+    notes: ["Giá trị viên tính theo tỷ lệ Thu/Đổi của kim cương rời (KCR)."]
+  - id: G2-DAMAU
+    payment_group: 2
+    label: "TS đá màu"
+    source: "A2 mục 2.3"
+    thu: 0.75
+    doi: 0.85
+  - id: G2-NT-NGOT
+    payment_group: 2
+    label: "TS ngọc trai – đá chính ngọc trai nước ngọt"
+    source: "A2 mục 2.3"
+    periods:
+      - {to: "2026-01-04", thu: 0.50, doi: 0.70}
+      - {from: "2026-01-05", thu: NL_THU, doi: NL_THU, stone_factor: 0, note: "Vàng thu theo giá NL; ngọc trai không thu đổi."}
+  - id: G2-NT-MAN
+    payment_group: 2
+    label: "TS ngọc trai – đá chính ngọc trai nước mặn"
+    source: "A2 mục 2.3"
+    thu: 0.60
+    doi: 0.75
+  - id: G2-NT-MOP
+    payment_group: 2
+    label: "TS ngọc trai – đá chính Mother of Pearl"
+    source: "A2 mục 2.3"
+    periods:
+      - {to: "2026-01-04", thu: NL, doi: NL, stone_factor: 0}
+      - {from: "2026-01-05", thu: NL_THU, doi: NL_THU, stone_factor: 0, note: "Vàng thu theo giá NL; ngọc trai không thu đổi."}
+  - id: G2-CHUOI-KHOA
+    payment_group: 2
+    label: "Chuỗi đá ngọc trai các loại gắn khóa vàng"
+    source: "A2 mục 2.3"
+    thu: 0.55
+    doi: 0.60
+    legacy: {before: "2016-01-15", token: CAM_KET_HD}
+    notes: ["SP không nguyên hiện trạng: khóa vàng thu theo giá nguyên liệu."]
+  - id: G2-CHUOI-NGOT-KHONGKHOA
+    payment_group: 2
+    label: "Chuỗi đá ngọc trai nước ngọt, không gắn khóa vàng/chi tiết vàng"
+    source: "A2 mục 2.3"
+    thu: KHONG
+    doi: KHONG
+  - id: G2-CHUOI-MAN-KHONGKHOA
+    payment_group: 2
+    label: "Chuỗi đá ngọc trai nước mặn, không gắn khóa vàng/chi tiết vàng"
+    source: "A2 mục 2.3"
+    thu: 0.50
+    doi: 0.50
+    min_value: 20000000
+    notes: ["Dưới 20.000.000 đ/SP không thu mua; SP không nguyên hiện trạng hoặc thiếu chứng từ: không thu mua."]
+  - id: G2-VO
+    payment_group: 2
+    label: "TS vỏ"
+    source: "A2 mục 2.3"
+    thu: 0.80
+    doi: 0.85
+
+  # ---------------- Nhóm thanh toán 3 (A2 nhóm 2) ----------------
+  - id: G3-TSY-KC
+    payment_group: 3
+    label: "TS công nghệ Ý gắn kim cương"
+    source: "A2 mục 2.3"
+    periods:
+      - {to: "2026-01-04", thu: 0.80, doi: 0.90}
+      - {from: "2026-01-05", thu: NL_THU, doi: NL_THU}
+  - id: G3-KGD-DC
+    payment_group: 3
+    label: "TS KGĐ / dây chuyền các loại / TS công nghệ Ý (không gồm Style)"
+    source: "A2 mục 2.3"
+    periods:
+      - {to: "2026-01-04", thu: 0.70, doi: 0.80}
+      - {from: "2026-01-05", thu: NL_THU, doi: NL_THU}
+  - id: G3-CZ
+    payment_group: 3
+    label: "TS CZ / ECZ / đá tổng hợp (không gồm Style)"
+    source: "A2 mục 2.3"
+    periods:
+      - {to: "2026-01-04", thu: 0.70, doi: 0.80}
+      - from: "2026-01-05"
+        to: "2026-03-31"
+        thu: 0.70
+        doi: 0.80
+        alt: {label: "Thu theo giá NL & mã NL (khách được chọn)", thu: NL_THU, doi: NL_THU}
+        note: "HĐ 05/01–31/03/2026: khách chọn theo tỷ lệ hoặc theo giá nguyên liệu & mã NL."
+      - {from: "2026-04-01", thu: 0.70, doi: 0.80}
+
+  # ---------------- Nhóm thanh toán 4 (A2 nhóm 3) ----------------
+  - id: G4-TUOIVANG
+    payment_group: 4
+    kind: weight_split
+    label: "Tuổi vàng 91,6% / 99% / 99,1–99,9% / 99,99% (giá bán = công + vàng, hoặc giá bán món)"
+    source: "A2 mục 2.3 – nhóm 3"
+    periods:
+      - {to: "2026-01-04", thu: NL, doi: NL, note: "Đổi sang nhóm 2–3: toàn bộ TLV cũ Đổi NL. Đổi cùng nhóm: TLV mới < TLV cũ thì phần chênh lệch Thu NL; TLV mới ≥ TLV cũ thì toàn bộ Đổi NL."}
+      - {from: "2026-01-05", thu: NL_THU, doi: NL_THU, stone_factor: 0.5, note: "SP gắn KC/đá quý/bán quý: thu đổi 50% giá trị đá, nhập mua theo mã hàng hóa trên HĐ."}
+  - id: G4-QUATANG-CONGVANG
+    payment_group: 4
+    label: "Quà tặng sưu tầm – giá bán = tiền công + tiền vàng"
+    source: "A2 mục 2.3; chi tiết PL A14"
+    thu: NL_THU
+    doi: NL_THU
+  - id: G4-QUATANG-MON
+    payment_group: 4
+    label: "Quà tặng sưu tầm – giá bán món"
+    source: "A2 mục 2.3; chi tiết PL A14"
+    periods:
+      - {to: "2026-01-04", thu: 0.70, doi: 0.80}
+      - {from: "2026-01-05", thu: NL_THU, doi: NL_THU}
+
+  # ---------------- Nhóm thanh toán 5 (A2 nhóm 4) ----------------
+  - id: G5-KCR-10UP
+    payment_group: 5
+    label: "KCR trắng tròn VS1/VVS1↑ – cỡ lớn nhất ≥10ly"
+    source: "A2 mục 2.3 – KCR"
+    thu: KHONG
+    doi: KHONG
+    notes: ["Không thu lại."]
+  - id: G5-KCR-86-10
+    payment_group: 5
+    label: "KCR trắng tròn VS1/VVS1↑ – cỡ lớn nhất 8,6–10ly"
+    source: "A2 mục 2.3 – KCR"
+    age_tiers:
+      - {max_years: 1, thu: 0.93, doi: 0.93}
+      - {thu: 0.90, doi: 0.90}
+    legacy: {before: "2018-06-11", token: CAM_KET_HD}
+    notes: ["Trong vòng 1 năm kể từ ngày HĐ: 93%; trên 1 năm: 90%."]
+  - id: G5-KCR-6-86
+    payment_group: 5
+    label: "KCR trắng tròn VS1/VVS1↑ – cỡ lớn nhất 6–8,6ly"
+    source: "A2 mục 2.3 – KCR"
+    thu: 0.95
+    doi: 0.98
+  - id: G5-KCR-5-6
+    payment_group: 5
+    label: "KCR trắng tròn VS1/VVS1↑ – cỡ lớn nhất 5–6ly"
+    source: "A2 mục 2.3 – KCR"
+    thu: 0.93
+    doi: 0.97
+  - id: G5-KCR-LT5
+    payment_group: 5
+    label: "KCR trắng tròn VS1/VVS1↑ – cỡ lớn nhất <5ly"
+    source: "A2 mục 2.3 – KCR"
+    thu: 0.93
+    doi: 0.95
+  - id: G5-KCR-SI-GE6
+    payment_group: 5
+    label: "KCR trắng tròn SI – cỡ lớn nhất ≥6ly"
+    source: "A2 mục 2.3 – KCR"
+    thu: 0.90
+    doi: 0.95
+  - id: G5-KCR-SI-LT6
+    payment_group: 5
+    label: "KCR trắng tròn SI – cỡ lớn nhất <6ly"
+    source: "A2 mục 2.3 – KCR"
+    thu: 0.85
+    doi: 0.90
+  - id: G5-KC-MAU
+    payment_group: 5
+    label: "KC màu (rời)"
+    source: "A2 mục 2.3 – KCR"
+    periods:
+      - {to: "2023-07-22", thu: 0.80, doi: 0.90}
+      - {from: "2023-07-23", thu: CAN_DUYET, doi: CAN_DUYET, note: "Chỉ áp dụng cho SP bán trước 23/07/2023 hoặc trường hợp được duyệt theo tờ trình."}
+  - id: G5-DAMAU-ROI
+    payment_group: 5
+    label: "Đá màu rời"
+    source: "A2 mục 2.3"
+    thu: 0.70
+    doi: 0.70
+    min_value: 2000000
+    notes: ["Dưới 2.000.000 đ/viên không thu mua; từ 2.000.000 đ/viên: 70% giá trị HĐ."]
+  - id: G5-NT-ROI-NGOT
+    payment_group: 5
+    label: "Ngọc trai rời – nước ngọt, Mabe các loại"
+    source: "A2 mục 2.3"
+    thu: KHONG
+    doi: KHONG
+  - id: G5-NT-ROI-MAN
+    payment_group: 5
+    label: "Ngọc trai rời – nước mặn"
+    source: "A2 mục 2.3"
+    thu: 0.70
+    doi: 0.70
+    min_value: 3000000
+    notes: ["Dưới 3.000.000 đ/viên không thu mua; từ 3.000.000 đ/viên: 70% giá trị HĐ."]
+  - id: G5-CAMTHACH
+    payment_group: 5
+    label: "Vòng cẩm thạch"
+    source: "A2 mục 2.3"
+    thu: 0.50
+    doi: 0.50
+    min_value: 8000000
+    notes: ["Dưới 8.000.000 đ/SP không thu mua; từ 8.000.000 đ/SP: mua lại 50% giá trị HĐ."]
+
+  # ---------------- Nhóm thanh toán 6–7 (Style by PNJ) ----------------
+  - id: G6-STYLE-KC
+    payment_group: 6
+    label: "Style by PNJ – TS kim cương / đá màu / ngọc trai"
+    source: "A2 mục 2.3 – nhóm 5"
+    age_tiers:
+      - {max_years: 1, thu: 0.50, doi: 0.60}
+      - {thu: NL_THU, doi: NL_THU}
+    notes: ["Sau 1 năm kể từ ngày xuất bán theo HĐ: thu theo giá nguyên liệu."]
+  - id: G7-STYLE-CZ
+    payment_group: 7
+    label: "Style by PNJ – TS CZ/ECZ/đá tổng hợp, KGĐ, dây chuyền"
+    source: "A2 mục 2.3 – nhóm 6"
+    age_tiers:
+      - {max_years: 1, thu: 0.50, doi: 0.60}
+      - {thu: NL_THU, doi: NL_THU}
+    notes: ["Sau 1 năm kể từ ngày xuất bán theo HĐ: thu theo giá nguyên liệu."]
+
+  # ---------------- Nhóm thanh toán 8–10 ----------------
+  - id: G8-H2H
+    payment_group: 8
+    label: "SP Heart to Heart"
+    source: "A2 mục 2.3 – nhóm 7; chi tiết PL A12"
+    thu: NL_THU
+    doi: NL_THU
+  - id: G9-KINDHEART
+    payment_group: 9
+    label: "SP Kind Heart"
+    source: "A2 mục 2.3 – nhóm 8"
+    thu: NL_THU
+    doi: NL_THU
+    legacy: {before: "2024-10-01", token: CAM_KET_HD}
+  - id: G10-CHARM
+    payment_group: 10
+    label: "Vòng/lắc charm phong thủy đặc biệt"
+    source: "A2 mục 2.3 – nhóm 9; danh mục PL A11"
+    periods:
+      - {to: "2026-01-04", thu: 0.65, doi: 0.75}
+      - {from: "2026-01-05", thu: NL_THU, doi: NL_THU}
+  - id: G10-LIXI
+    payment_group: 10
+    label: "Bao lì xì phong thủy"
+    source: "A2 mục 2.3 – nhóm 9; danh mục PL A11"
+    thu: KHONG
+    doi: KHONG
+
+  # ---------------- Nhóm thanh toán 11–13 (tra phụ lục, không tự tính) ----------------
+  - id: G11-NL-NONPNJ
+    payment_group: 11
+    label: "Nguyên liệu (non-PNJ)"
+    source: "Excel mapping – nhóm 11"
+    thu: REF_CT
+    doi: REF_CT
+    notes: ["Áp dụng theo chương trình thu mua hiện hành của Khối Cung ứng."]
+  - id: G12-KHDN-PNJ
+    payment_group: 12
+    label: "SP kênh KHDN PNJ kinh doanh"
+    source: "A2 mục 2.3; PL A15"
+    thu: REF_A15
+    doi: REF_A15
+  - id: G13-KHDN-PNJP
+    payment_group: 13
+    label: "SP kênh KHDN PNJP kinh doanh"
+    source: "A2 mục 2.3; PL A16"
+    thu: REF_A16
+    doi: REF_A16

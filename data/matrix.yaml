@@ -1,0 +1,67 @@
+# Nhóm hàng, ma trận chuyển đổi, lộ trình thanh toán – theo TB 442-2026 (28/09/2026) mục IV
+# và đối chiếu PL A2 (hiệu lực 30/09/2026) + Excel mapping. Ba nguồn khớp nhau.
+
+documents:
+  tb: "TB 442-2026-TB-P.VHBL-TĐTGTTHML-PNJ"
+  tb_date: "28/09/2026"
+  tb_effective: "30/09/2026"
+  a2: "PL A2 – MS PNJ-QT-PVHBL-TĐHTK-A2"
+  a2_effective: "30/09/2026"
+
+groups:
+  1:  {code: "N#",  name: "Vàng miếng, nhẫn khoen, vàng Phúc Lộc Tài, vàng Kim Bảo", schedule: T2,   quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  2:  {code: "N1",  name: "TS kim cương, đá màu, ngọc trai (gồm chuỗi), vỏ; mua theo mã dùng chung (không gồm Style by PNJ)", schedule: T120, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  3:  {code: "N2",  name: "TS công nghệ Ý (gắn KC), KGĐ/dây chuyền, ECZ/CZ/đá tổng hợp; mua theo mã nguyên liệu PNJ (không gồm Style)", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  4:  {code: "N3",  name: "Tuổi vàng 91,6% / 99% / 99,1–99,9% / 99,99% và quà tặng sưu tầm", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  5:  {code: "N4",  name: "Kim cương rời, đá màu rời, ngọc trai rời, vòng cẩm thạch", schedule: T120, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  6:  {code: "N5",  name: "Style by PNJ: TS kim cương, đá màu, ngọc trai (mã dùng chung)", schedule: T120, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  7:  {code: "N6",  name: "Style by PNJ: TS KGĐ/dây chuyền, ECZ/CZ/đá tổng hợp (mã nguyên liệu PNJ)", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  8:  {code: "N7",  name: "SP Heart to Heart", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  9:  {code: "N8",  name: "SP Kind Heart", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  10: {code: "N9",  name: "Vòng lắc charm phong thủy đặc biệt, bao lì xì phong thủy", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  11: {code: "",    name: "Nguyên liệu (non-PNJ)", schedule: T7, quota: "Quota ngày cho từng chi nhánh (khi có nhu cầu)"}
+  12: {code: "",    name: "SP của kênh KHDN PNJ kinh doanh", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+  13: {code: "",    name: "SP của kênh KHDN PNJP kinh doanh", schedule: T7, quota: "Quota ngày cho tổng dòng hàng tại từng chi nhánh"}
+
+# Hàng cũ (key) có thể chuyển đổi thanh toán sang nhóm hàng mới (value).
+conversion:
+  1:  [2, 3, 4, 5, 6, 7]
+  2:  [2, 5]
+  3:  [2, 3, 5]
+  4:  [2, 3, 4, 5]
+  5:  [2, 5]
+  6:  [6]
+  7:  [6, 7]
+  8:  [8]
+  9:  [9]
+  10: [10]
+  11: []
+  12: []
+  13: []
+
+# pct: tỷ lệ phần trăm; offset: mốc thanh toán (nguyên văn TB 442).
+schedules:
+  T2:
+    label: "T+2"
+    rows:
+      - {offset: "T+2", pct: 100}
+  T7:
+    label: "T+7"
+    rows:
+      - {offset: "T+7", pct: 100}
+  T120:
+    label: "T+120"
+    rows:
+      - {offset: "T/T+1", pct: 10}
+      - {offset: "T+30", pct: 20}
+      - {offset: "T+60", pct: 25}
+      - {offset: "T+90", pct: 25}
+      - {offset: "T+120", pct: 20}
+
+# Nhóm đang có thỏa thuận T+120 từ trước: nhóm nào được chi trả toàn bộ phần còn lại (TB 442 mục V).
+legacy_t120_paid_in_full: [1, 3, 4, 7, 8, 9, 10]
+legacy_t120_keep_schedule: [2, 5, 6]
+
+transaction:
+  buyback_window_start: "15:00"
+  buyback_window_stop: "17:00"

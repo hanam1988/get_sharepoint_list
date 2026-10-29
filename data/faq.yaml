@@ -1,0 +1,80 @@
+# Hướng dẫn quy trình và Q&A – tóm tắt từ TB 442-2026 và PL A2.
+# Đây là bản tóm tắt để tra nhanh, không thay thế văn bản gốc.
+
+guide:
+  - title: "Bước 1 – Kiểm tra điều kiện nhận thu đổi"
+    body: |
+      - Sản phẩm do PNJ bán ra; khách có đúng, đủ chứng từ: HĐ do PNJ phát hành, chính sách bán hàng, giấy giám định đá (nếu có).
+      - Sản phẩm **nguyên hiện trạng**: không biến dạng, không mất chi tiết, đúng cấp chất lượng, dấu đóng rõ, trọng lượng lệch trong ±0,006 chỉ so với HĐ/hệ thống.
+      - Không áp dụng: bạc, hợp kim cao cấp, đồng hồ, trang sức đồng hồ, mắt kính. Trang sức CAF đổi sang PNJ (và ngược lại) chỉ áp dụng tại các cửa hàng CAO SIS.
+      - Thiếu chứng từ nhưng nhận diện được là hàng PNJ: xử lý theo từng trường hợp, đảm bảo chất lượng đạt tiêu chuẩn PNJ.
+  - title: "Bước 2 – Xác định nhóm hàng và dòng hàng"
+    body: |
+      - Xác định nhóm thanh toán (1–13) và dòng hàng chi tiết của từng món hàng cũ.
+      - Với trang sức kim cương: xác định **đá chính** (ký tự 3–4 của mã SP; đá có cạnh lớn nhất, hòa thì xét cạnh nhỏ), rồi xác định tròn hay Fancy.
+      - Ngày xuất hóa đơn quyết định tỷ lệ (mốc 05/01/2026 và các mốc riêng của từng dòng hàng).
+  - title: "Bước 3 – Chọn Thu hay Đổi"
+    body: |
+      - **Đổi** khi: nhóm hàng cũ và mới đều thuộc nhóm được áp dụng đổi; tổng giá trị hàng mới ≥ tổng giá trị hàng cũ; mã khách hàng trên Bảng kê và HĐ mới là một.
+      - **Thu** khi: không đạt các điều kiện trên, hoặc khách bán lại và không mua sản phẩm mới.
+  - title: "Bước 4 – Chọn phương án cho khách"
+    body: |
+      - **Phương án 1**: chuyển đổi sang sản phẩm mới có giá trị bằng hoặc cao hơn giá trị mua lại.
+      - **Phương án 2**: chuyển đổi một phần, phần còn lại nhận tiền theo lộ trình của dòng hàng.
+      - **Phương án 3**: mua lại hoàn toàn.
+      - Phương án 1 và 2 chỉ áp dụng khi nhóm hàng thuộc diện chuyển đổi thanh toán; nếu không, chỉ còn phương án 3.
+  - title: "Bước 5 – Nơi thực hiện và khung giờ"
+    body: |
+      - Cửa hàng **HUB**: nhận toàn bộ giao dịch Thu Đổi và Mua Lại.
+      - Cửa hàng còn lại (kể cả kênh GT & MT): chỉ nhận giao dịch chuyển đổi sang sản phẩm mới có giá trị ≥ giá trị hàng mua lại.
+      - Bất kỳ giao dịch nào phát sinh nghĩa vụ chi tiền cho khách đều là giao dịch **Mua Lại** và bắt buộc thực hiện tại HUB.
+      - Khung giờ tiếp nhận giao dịch Mua Lại: **15h00–17h00** mỗi ngày; từ 17h00 ngừng phát số.
+      - Hạn mức tiền mặt (cash-out) được cấp mỗi đầu ngày theo dòng hàng và chi nhánh, không cấp bổ sung trong ngày. Kế toán trưởng chi nhánh ngừng nhận khi hết hạn mức.
+  - title: "Bước 6 – Chứng từ"
+    body: |
+      - Bảng kê thu mua hàng hóa mua vào không có hóa đơn (Mẫu 02/TNDN), kèm Phụ lục 01 Thỏa thuận thu đổi sản phẩm.
+      - Chỉ in Phụ lục 01 khi áp dụng **phương án 2**: in 2 bản, các bên xác nhận đầy đủ; một bản giao khách, một bản lưu cửa hàng.
+      - Hệ thống tự đồng bộ số series/sub-code của Phụ lục 01 với master code của Bảng kê; cửa hàng không tính tay.
+      - Cửa hàng in và lưu bản cứng có dấu mộc đỏ của "Thông báo về hồ sơ giao dịch mua hàng giữa PNJ và khách hàng" (Giám đốc Tài chính đã ký duyệt) để giải thích cho khách.
+      - Tư vấn đầy đủ cho khách các điều khoản trong Phụ lục 01.
+      - Thanh toán và chuyển đổi tuân thủ thông báo hiện hành của Khối Tài chính và NĐ 232/2025/NĐ-CP, 320/2025/NĐ-CP, 340/2025/NĐ-CP.
+  - title: "Xử lý sản phẩm không nguyên hiện trạng (A2 mục 3 – tra cứu)"
+    body: |
+      - Mất đá, mất chi tiết lớn/chính, hao hụt trọng lượng, SP biến dạng, thiếu dấu mộc: A2 có công thức riêng cho từng trường hợp. App chưa tự tính các trường hợp này.
+      - Hướng dẫn nhanh: TS bị chia nhiều phần hoặc biến dạng không nhận diện được mẫu, mã thì phải kiểm tra/thử nghiệm chất lượng; đạt thì thu theo giá nguyên liệu. TS thiếu dấu mộc cũng phải kiểm tra/thử nghiệm; đạt tiêu chuẩn thì thu đổi theo chính sách đã cam kết. Không đạt thì từ chối thu đổi.
+      - Đá màu đổi màu/bong keo: gửi P.TL&ĐBCL xác định nguyên nhân.
+      - Khi mất chi tiết lớn/chính, TVV phải tư vấn chính sách chi tiết bị mất, ghi nhận trên Bảng kê và khách ký xác nhận.
+
+qa:
+  - q: "Thông báo 442-2026 áp dụng từ khi nào?"
+    a: "Từ ngày 30/09/2026 đến khi có thông báo mới. Thông báo ký ngày 28/09/2026 và thay thế Thông báo 346-2026-TB-BP.DVKH-PAXLGDML-PNJ."
+  - q: "Khi nào khách được hưởng tỷ lệ Đổi?"
+    a: "Khi nhóm hàng cũ và mới đều thuộc nhóm được áp dụng đổi, tổng giá trị hàng mới ≥ tổng giá trị hàng cũ, và mã khách hàng trên Bảng kê trùng mã khách hàng trên HĐ mới. Nếu không đạt thì áp dụng tỷ lệ Thu."
+  - q: "Cửa hàng thường (không phải HUB) nhận được giao dịch nào?"
+    a: "Chỉ giao dịch chuyển đổi sang sản phẩm mới có giá trị bằng hoặc cao hơn giá trị hàng mua lại, và thuộc nhóm hàng được áp dụng chuyển đổi thanh toán. Giao dịch nào phát sinh chi trả tiền cho khách đều phải làm tại HUB."
+  - q: "Giao dịch Mua Lại nhận trong khung giờ nào?"
+    a: "Từ 15h00 đến 17h00 mỗi ngày. Bắt đầu tiếp nhận từ 15h00; bắt đầu ngừng phát số lúc 17h00."
+  - q: "Khách muốn nhận lại tiền thì lộ trình thế nào?"
+    a: "Tùy nhóm hàng. Nhóm 1: T+2. Nhóm 3, 4, 7, 8, 9, 10, 11, 12, 13: T+7. Nhóm 2, 5, 6: T+120 với lộ trình 10% T/T+1, 20% T+30, 25% T+60, 25% T+90, 20% T+120."
+  - q: "Khi nào phải in Phụ lục 01?"
+    a: "Chỉ khi áp dụng phương án 2 (chuyển đổi một phần và nhận tiền phần còn lại). In 2 bản: khách giữ một bản, cửa hàng lưu một bản."
+  - q: "Nếu hết hạn mức trong ngày thì sao?"
+    a: "Hạn mức tiền mặt cấp đầu ngày theo dòng hàng và chi nhánh, không cấp bổ sung trong ngày. Kế toán trưởng chi nhánh theo dõi và ngừng tiếp nhận giao dịch Mua Lại khi hết hạn mức."
+  - q: "Giao dịch đã tiếp nhận có bị ảnh hưởng nếu nhu cầu tăng cao không?"
+    a: "Không. PNJ vẫn thực hiện đầy đủ nghĩa vụ thanh toán đối với các giao dịch đã được tiếp nhận và xác lập đúng chính sách, điều kiện và lộ trình thông báo cho khách."
+  - q: "Giao dịch T+120 đã xác lập trước đó được xử lý thế nào?"
+    a: "Nhóm 1, 3, 4, 7, 8, 9, 10: PNJ chi trả toàn bộ giá trị còn lại phải thanh toán cho khách. Nhóm 2, 5, 6: tiếp tục theo lộ trình đã thỏa thuận."
+  - q: "Thế nào là sản phẩm nguyên hiện trạng?"
+    a: "Không biến dạng, không mất chi tiết, đúng cấp chất lượng ban đầu, không hư hỏng hoặc hao mòn quá mức, không thay bộ phận không phải của PNJ, trọng lượng lệch không quá ±0,006 chỉ so với HĐ/hệ thống, và dấu đóng nhận diện đầy đủ, rõ ràng."
+  - q: "Chênh lệch trọng lượng vàng được xử lý thế nào với hàng thu theo giá nguyên liệu?"
+    a: "Lệch trong ±0,006 chỉ: tính theo trọng lượng trên HĐ. Lệch vượt ±0,006 chỉ: tính theo trọng lượng thực tế tại thời điểm thu đổi."
+  - q: "Hàng bán từ 05/01/2026 có khác hàng bán trước đó không?"
+    a: "Có với một số dòng. Ví dụ tuổi vàng 91,6–99,99%, TS công nghệ Ý, TS KGĐ/dây chuyền, quà tặng sưu tầm giá món, charm phong thủy: từ 05/01/2026 thu theo giá nguyên liệu. Ngọc trai nước ngọt và Mother of Pearl: vàng thu theo giá nguyên liệu, ngọc trai không thu đổi. Các dòng khác giữ nguyên."
+  - q: "TS CZ/ECZ/đá tổng hợp bán từ 05/01 đến 31/03/2026 tính thế nào?"
+    a: "Khách được chọn một trong hai: theo tỷ lệ (Thu 70%, Đổi 80%) hoặc Thu theo giá nguyên liệu và mã nguyên liệu. HĐ từ 01/04/2026 trở đi áp dụng theo tỷ lệ."
+  - q: "Khách thiếu chứng từ thì có thu đổi được không?"
+    a: "Nếu nhận diện được sản phẩm do PNJ kinh doanh thì xử lý theo từng trường hợp, đảm bảo chất lượng đạt chuẩn PNJ. Một số dòng (ví dụ chuỗi ngọc trai nước mặn không khóa vàng) ghi rõ không thu mua khi thiếu chứng từ."
+  - q: "Đơn đặt cọc kết hợp thu đổi cần lưu ý gì?"
+    a: "Bảng kê, đơn cọc và HĐ mới phải cùng mã khách hàng; Bảng kê lập cùng thời điểm với đơn cọc hoặc HĐ món mới; tổng giá trị HĐ mới và/hoặc đơn cọc ≥ tổng giá trị HĐ cũ; 100% giá trị Bảng kê áp dụng tỷ lệ đổi được chuyển sang đơn cọc. PNJ không hoàn cọc nếu khách không thực hiện đúng cam kết."
+  - q: "Cần liên hệ ai khi vướng mắc?"
+    a: "Quy trình, quy định thu đổi: Diệp Nguyễn Yến Phương (P. Vận hành bán lẻ). Trưng bày (VM): Phạm Anh Duy (Bp. Thiết kế & Phát triển hệ thống). Không mở được link hình ảnh POP: Nguyễn Thị Trúc Phương (Bp. Dịch vụ khách hàng)."
