@@ -10,8 +10,8 @@ pytest -q
 ```
 
 ## Dùng app
-1. Sidebar: chọn cửa hàng HUB/thường, ngày giờ giao dịch, nhập giá vàng/Platin (nhập tay, mặc định 0).
-2. Tab **Tính cấn trừ**: nhập hàng cũ (nhóm, dòng hàng hoặc đặc điểm đá, ngày và giá trị HĐ), hàng mới; app cho ra tỷ lệ Thu/Đổi, giá trị cấn trừ, phương án 1/2/3, nơi thực hiện, khung giờ, lộ trình chi trả, chứng từ và gợi ý câu trả lời.
+1. Thanh bên: chọn cửa hàng HUB/thường, ngày giờ giao dịch, các điều kiện giao dịch, và nhập giá vàng/Platin (nhập tay, mặc định 0).
+2. Tab **Tính cấn trừ** chia 2 cột: **Hàng cũ (Bảng kê)** bên trái, **Hàng mới (Hóa đơn)** bên phải. Mỗi dòng gồm nhóm hàng, giá trị, nút ⚙️ (dòng hàng, ngày hóa đơn, giá nguyên liệu) và nút Xóa; có nút thêm món và tổng giá trị dưới mỗi cột. Bên dưới là kết quả: tỷ lệ Thu/Đổi, giá trị cấn trừ, phương án 1/2/3, nơi thực hiện, khung giờ, lộ trình chi trả, chứng từ và gợi ý câu trả lời. Không có món hàng mới nghĩa là khách chỉ bán lại.
 3. Tab **Quy trình**, **Ma trận & thanh toán**, **Q&A**: tra cứu nhanh.
 
 ## Cấu trúc

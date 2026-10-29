@@ -37,12 +37,19 @@ def load_faq() -> dict:
 # ----------------------------------------------------------------------------
 # Sidebar: bối cảnh giao dịch và giá nhập tay
 # ----------------------------------------------------------------------------
-def sidebar() -> tuple[date, object, bool, Prices]:
+def sidebar() -> tuple[date, object, bool, Prices, dict]:
     st.sidebar.header("Bối cảnh giao dịch")
     store = st.sidebar.radio("Cửa hàng đang làm giao dịch", ["Cửa hàng HUB", "Cửa hàng thường (không phải HUB)"], key="store")
     now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     txn_date = st.sidebar.date_input("Ngày giao dịch (T)", value=now.date(), format="DD/MM/YYYY", key="txn_date")
     txn_time = st.sidebar.time_input("Giờ giao dịch", value=now.time().replace(second=0, microsecond=0), key="txn_time")
+
+    st.sidebar.subheader("Điều kiện giao dịch")
+    cond = {
+        "same_customer": st.sidebar.checkbox("Mã khách hàng trên Bảng kê trùng mã trên HĐ mới", value=True, key="same_cust"),
+        "intact": st.sidebar.checkbox("Sản phẩm nguyên hiện trạng", value=True, key="intact"),
+        "papers": st.sidebar.checkbox("Khách có đủ chứng từ (HĐ PNJ, chính sách bán hàng, giấy giám định nếu có)", value=True, key="papers"),
+    }
 
     st.sidebar.subheader("Giá nguyên liệu (nhập tay)")
     st.sidebar.caption("App không kết nối bảng giá điện tử. Nhập giá niêm yết tại thời điểm thu đổi (đ/chỉ). Giá bằng 0 nghĩa là chưa nhập.")
@@ -57,99 +64,142 @@ def sidebar() -> tuple[date, object, bool, Prices]:
     platin = st.sidebar.number_input("Đơn giá Platin chuẩn – quy 10 (đ/chỉ)", min_value=0, value=0, step=10_000, format="%d", key="platin")
     gold = {str(r["Tuổi vàng (%)"]): (dec(r["Mua vào"]), dec(r["Bán ra"])) for _, r in edited.iterrows()}
     prices = Prices(gold=gold, platin_std=dec(platin))
-    return txn_date, txn_time, store.startswith("Cửa hàng HUB"), prices
+    return txn_date, txn_time, store.startswith("Cửa hàng HUB"), prices, cond
 
 
 # ----------------------------------------------------------------------------
-# Form hàng cũ
+# Danh sách dòng hàng: bố cục 2 cột, mỗi dòng gọn (nhóm hàng | giá trị | chi tiết | xóa)
 # ----------------------------------------------------------------------------
-def old_item_form(idx: int, txn_date: date, prices: Prices) -> OldItem | None:
+OLD_LIMIT, NEW_LIMIT = 6, 4
+OLD_GROUPS = list(range(1, 14))
+NEW_GROUPS = list(range(1, 11))
+
+
+def vnd_big(x: Decimal | int) -> str:
+    return f"{Decimal(x):,.0f}".replace(",", ".") + " VNĐ"
+
+
+def init_rows() -> None:
+    ss = st.session_state
+    ss.setdefault("old_ids", [0])
+    ss.setdefault("old_next", 1)
+    ss.setdefault("new_ids", [0])
+    ss.setdefault("new_next", 1)
+
+
+def add_row(kind: str, limit: int) -> None:
+    ss = st.session_state
+    if len(ss[f"{kind}_ids"]) < limit:
+        ss[f"{kind}_ids"].append(ss[f"{kind}_next"])
+        ss[f"{kind}_next"] += 1
+
+
+def remove_row(kind: str, rid: int) -> None:
+    ids = st.session_state[f"{kind}_ids"]
+    if rid in ids:
+        ids.remove(rid)
+
+
+def old_details(rid: int, group: int, inv_value: int, txn_date: date) -> OldItem | None:
+    """Phần chi tiết của một món hàng cũ (hiển thị trong popover)."""
     rules = load_rules()
-    with st.expander(f"Món hàng cũ #{idx + 1}", expanded=idx == 0):
-        name = st.text_input("Tên hoặc mã sản phẩm (tùy chọn)", key=f"o{idx}_name")
-        group = st.selectbox("Nhóm hàng", list(range(1, 14)), index=1, format_func=matrix.group_label, key=f"o{idx}_group")
+    name = st.text_input("Tên hoặc mã sản phẩm (tùy chọn)", key=f"o{rid}_name")
 
-        candidates: tuple[str, ...] = ()
-        kcr_ids: tuple[str, ...] = ()
-        size = None
-        helper = group in (2, 5)
-        use_stone = False
-        if helper:
-            options = ["Kim cương – xác định theo đặc điểm đá", "Dòng hàng khác – chọn từ danh sách"]
-            use_stone = st.radio("Cách chọn dòng hàng", options, key=f"o{idx}_how", horizontal=True) == options[0]
+    candidates: tuple[str, ...] = ()
+    kcr_ids: tuple[str, ...] = ()
+    use_stone = False
+    if group in (2, 5):
+        options = ["Kim cương – xác định theo đặc điểm đá", "Dòng hàng khác – chọn từ danh sách"]
+        use_stone = st.radio("Cách chọn dòng hàng", options, key=f"o{rid}_how") == options[0]
 
-        if use_stone:
-            c1, c2, c3 = st.columns(3)
-            shape = c1.selectbox("Hình dáng / loại đá chính", SHAPES, key=f"o{idx}_shape")
-            clarity = c2.selectbox("Độ sạch", CLARITIES, index=2, key=f"o{idx}_clar")
-            size = c3.number_input("Cỡ lớn nhất (ly)", min_value=0.0, value=4.5, step=0.1, format="%.2f", key=f"o{idx}_size")
-            pick = pick_ts_kc(shape, clarity, size) if group == 2 else pick_kcr(shape, clarity, size)
-            if pick is None:
-                st.error("PL A2 không có dòng hàng phù hợp với tổ hợp hình dáng/độ sạch này. Chuyển P. Vận hành bán lẻ hoặc P.MH xác định.")
-                return None
-            candidates = pick.candidates
-            if pick.note:
-                (st.warning if pick.boundary else st.info)(pick.note)
-            if "G2-KC-D" in candidates:
-                kp = pick_kcr("Tròn (KC trắng)", clarity, size)
-                kcr_ids = kp.candidates if kp else ()
+    if use_stone:
+        c1, c2, c3 = st.columns(3)
+        shape = c1.selectbox("Hình dáng / loại đá chính", SHAPES, key=f"o{rid}_shape")
+        clarity = c2.selectbox("Độ sạch", CLARITIES, index=2, key=f"o{rid}_clar")
+        size = c3.number_input("Cỡ lớn nhất (ly)", min_value=0.0, value=4.5, step=0.1, format="%.2f", key=f"o{rid}_size")
+        pick = pick_ts_kc(shape, clarity, size) if group == 2 else pick_kcr(shape, clarity, size)
+        if pick is None:
+            st.error("PL A2 không có dòng hàng phù hợp với tổ hợp hình dáng/độ sạch này. Chuyển P. Vận hành bán lẻ hoặc P.MH xác định.")
+            return None
+        candidates = pick.candidates
+        if pick.note:
+            (st.warning if pick.boundary else st.info)(pick.note)
+        if "G2-KC-D" in candidates:
+            kp = pick_kcr("Tròn (KC trắng)", clarity, size)
+            kcr_ids = kp.candidates if kp else ()
+    else:
+        group_rules = rules_of_group(group)
+        rid_rule = st.selectbox("Dòng hàng", [r.id for r in group_rules], format_func=lambda i: rules[i].label, key=f"o{rid}_rule")
+        candidates = (rid_rule,)
+
+    inv_date = st.date_input("Ngày xuất hóa đơn", value=txn_date - timedelta(days=365), max_value=txn_date, format="DD/MM/YYYY", key=f"o{rid}_date")
+    item = OldItem(rule_ids=candidates, inv_date=inv_date, inv_value=dec(inv_value), name=name)
+    item.kcr_rule_ids = kcr_ids
+
+    resolved = [(rules[c], resolve(rules[c], inv_date, txn_date)) for c in candidates]
+    needs_nl = any(r.kind == "weight_split" or {res.thu, res.doi} & NL_TOKENS or (res.alt and {res.alt["thu"], res.alt["doi"]} & NL_TOKENS) for r, res in resolved)
+    needs_commit = any("CAM_KET_HD" in (res.thu, res.doi) for _, res in resolved)
+
+    for r, res in resolved:
+        st.caption(f"**{r.label}** – Thu: {fmt_token(res.thu)} · Đổi: {fmt_token(res.doi)} · Căn cứ: {r.source}")
+        for note in res.notes:
+            st.caption(f"• {note}")
+
+    if any(r.kind == "split_shell_stone" for r, _ in resolved):
+        c1, c2 = st.columns(2)
+        item.shell_value = dec(c1.number_input("Giá trị vỏ trên HĐ (đ)", min_value=0, value=0, step=100_000, format="%d", key=f"o{rid}_shell"))
+        item.kcr_stone_value = dec(c2.number_input("Giá trị viên đá chính trên HĐ (đ)", min_value=0, value=0, step=100_000, format="%d", key=f"o{rid}_kstone"))
+    if needs_commit:
+        pct = st.number_input("Tỷ lệ cam kết ghi trên HĐ / chính sách trích lục (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.5, key=f"o{rid}_commit")
+        item.cam_ket_ratio = dec(pct) / 100 if pct > 0 else None
+    alt = next((res.alt for _, res in resolved if res.alt), None)
+    if alt:
+        item.use_alt = st.checkbox(f"Khách chọn: {alt['label']}", key=f"o{rid}_alt")
+    if any(r.combo_doi is not None for r, _ in resolved):
+        item.combo = st.checkbox("Đổi sang Combo mới (TS vỏ + KCR) có tổng giá trị ≥ hàng cũ", key=f"o{rid}_combo")
+    if needs_nl:
+        st.markdown("**Tính theo giá nguyên liệu**")
+        c1, c2, c3 = st.columns(3)
+        item.material = c1.radio("Chất liệu", ["Vàng", "Platin"], key=f"o{rid}_mat", horizontal=True)
+        if item.material == "Vàng":
+            item.tuoi = c2.selectbox("Tuổi vàng (%)", GOLD_AGES, key=f"o{rid}_tuoi")
         else:
-            group_rules = rules_of_group(group)
-            rid = st.selectbox("Dòng hàng", [r.id for r in group_rules], format_func=lambda i: rules[i].label, key=f"o{idx}_rule")
-            candidates = (rid,)
-
-        inv_date = st.date_input("Ngày xuất hóa đơn", value=txn_date - timedelta(days=365), max_value=txn_date, format="DD/MM/YYYY", key=f"o{idx}_date")
-        inv_value = st.number_input("Giá trị theo hóa đơn (đ)", min_value=0, value=0, step=100_000, format="%d", key=f"o{idx}_inv")
-
-        item = OldItem(rule_ids=candidates, inv_date=inv_date, inv_value=dec(inv_value), name=name)
-        item.kcr_rule_ids = kcr_ids
-
-        resolved = [(rules[c], resolve(rules[c], inv_date, txn_date)) for c in candidates]
-        needs_nl = any(r.kind == "weight_split" or {res.thu, res.doi} & NL_TOKENS or (res.alt and {res.alt["thu"], res.alt["doi"]} & NL_TOKENS) for r, res in resolved)
-        needs_commit = any("CAM_KET_HD" in (res.thu, res.doi) for _, res in resolved)
-
-        for r, res in resolved:
-            st.caption(f"**{r.label}** – Thu: {fmt_token(res.thu)} · Đổi: {fmt_token(res.doi)} · Căn cứ: {r.source}")
-            for note in res.notes:
-                st.caption(f"• {note}")
-
-        if any(r.kind == "split_shell_stone" for r, _ in resolved):
-            c1, c2 = st.columns(2)
-            item.shell_value = dec(c1.number_input("Giá trị vỏ trên HĐ (đ)", min_value=0, value=0, step=100_000, format="%d", key=f"o{idx}_shell"))
-            item.kcr_stone_value = dec(c2.number_input("Giá trị viên đá chính trên HĐ (đ)", min_value=0, value=0, step=100_000, format="%d", key=f"o{idx}_kstone"))
-        if needs_commit:
-            pct = st.number_input("Tỷ lệ cam kết ghi trên HĐ / chính sách trích lục (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.5, key=f"o{idx}_commit")
-            item.cam_ket_ratio = dec(pct) / 100 if pct > 0 else None
-        alt = next((res.alt for _, res in resolved if res.alt), None)
-        if alt:
-            item.use_alt = st.checkbox(f"Khách chọn: {alt['label']}", key=f"o{idx}_alt")
-        if any(r.combo_doi is not None for r, _ in resolved):
-            item.combo = st.checkbox("Đổi sang Combo mới (TS vỏ + KCR) có tổng giá trị ≥ hàng cũ", key=f"o{idx}_combo")
-        if needs_nl:
-            st.markdown("**Tính theo giá nguyên liệu**")
-            c1, c2, c3 = st.columns(3)
-            item.material = c1.radio("Chất liệu", ["Vàng", "Platin"], key=f"o{idx}_mat", horizontal=True)
-            if item.material == "Vàng":
-                item.tuoi = c2.selectbox("Tuổi vàng (%)", GOLD_AGES, key=f"o{idx}_tuoi")
-            else:
-                item.tuoi = str(c2.number_input("Tuổi Platin (%)", min_value=0.0, max_value=100.0, value=95.0, step=0.5, key=f"o{idx}_ptuoi"))
-            item.tl_hd = dec(c3.number_input("Trọng lượng vàng/Platin trên HĐ (chỉ)", min_value=0.0, value=0.0, step=0.001, format="%.3f", key=f"o{idx}_tlhd"))
-            c4, c5 = st.columns(2)
-            actual = c4.number_input("Trọng lượng thực tế (chỉ) – để 0 nếu chưa cân", min_value=0.0, value=0.0, step=0.001, format="%.3f", key=f"o{idx}_tlreal")
-            item.tl_thuc_te = dec(actual) if actual > 0 else None
-            item.stone_value = dec(c5.number_input("Giá trị đá/ngọc trai (đ) – P.MH định giá hoặc PL A8", min_value=0, value=0, step=100_000, format="%d", key=f"o{idx}_stone"))
-        return item
+            item.tuoi = str(c2.number_input("Tuổi Platin (%)", min_value=0.0, max_value=100.0, value=95.0, step=0.5, key=f"o{rid}_ptuoi"))
+        item.tl_hd = dec(c3.number_input("TL vàng/Platin trên HĐ (chỉ)", min_value=0.0, value=0.0, step=0.001, format="%.3f", key=f"o{rid}_tlhd"))
+        c4, c5 = st.columns(2)
+        actual = c4.number_input("TL thực tế (chỉ) – 0 nếu chưa cân", min_value=0.0, value=0.0, step=0.001, format="%.3f", key=f"o{rid}_tlreal")
+        item.tl_thuc_te = dec(actual) if actual > 0 else None
+        item.stone_value = dec(c5.number_input("Giá trị đá/ngọc trai (đ)", min_value=0, value=0, step=100_000, format="%d", key=f"o{rid}_stone", help="P.MH định giá hoặc PL A8"))
+    return item
 
 
-def new_item_form(idx: int) -> NewItem:
-    c1, c2, c3 = st.columns([3, 2, 1])
-    usable = list(range(1, 11))
-    group = c1.selectbox(f"Nhóm hàng mới #{idx + 1}", usable, index=1, format_func=matrix.group_label, key=f"n{idx}_group")
-    value = c2.number_input("Giá trị hóa đơn mới (đ)", min_value=0, value=0, step=100_000, format="%d", key=f"n{idx}_value")
+def old_row(pos: int, rid: int, txn_date: date) -> tuple[OldItem | None, bool]:
+    """Một dòng hàng cũ. Trả về (món hàng hoặc None, đã chọn nhóm hàng)."""
+    c1, c2, c3, c4 = st.columns([4.2, 3, 1, 1.6], vertical_alignment="bottom")
+    group = c1.selectbox(f"Món BK{pos}:", OLD_GROUPS, index=None, placeholder="-- Chọn nhóm hàng --", format_func=matrix.group_label, key=f"o{rid}_group")
+    inv_value = c2.number_input(f"Giá trị BK{pos} (VNĐ):", min_value=0, value=0, step=100_000, format="%d", key=f"o{rid}_inv")
+    pop = c3.popover("⚙️", help="Chi tiết: dòng hàng, ngày hóa đơn, giá nguyên liệu", use_container_width=True)
+    c4.button("🗑️ Xóa", key=f"o{rid}_del", on_click=remove_row, args=("old", rid), use_container_width=True)
+    item = None
+    with pop:
+        if group is None:
+            st.caption("Chọn nhóm hàng trước.")
+        else:
+            item = old_details(rid, group, inv_value, txn_date)
+    return item, group is not None
+
+
+def new_row(pos: int, rid: int) -> NewItem | None:
+    c1, c2, c3 = st.columns([5, 3, 1.6], vertical_alignment="bottom")
+    group = c1.selectbox(f"Món HĐ{pos}:", NEW_GROUPS, index=None, placeholder="-- Chọn nhóm hàng --", format_func=matrix.group_label, key=f"n{rid}_group")
+    value = c2.number_input(f"Giá trị HĐ{pos} (VNĐ):", min_value=0, value=0, step=100_000, format="%d", key=f"n{rid}_value")
+    c3.button("🗑️ Xóa", key=f"n{rid}_del", on_click=remove_row, args=("new", rid), use_container_width=True)
     tlv = None
     if group == 4:
-        t = c3.number_input("TLV mới (chỉ)", min_value=0.0, value=0.0, step=0.001, format="%.3f", key=f"n{idx}_tlv", help="Dùng khi đổi cùng nhóm tuổi vàng. Để 0 nếu chưa biết (app coi như TLV mới ≥ TLV cũ).")
+        t = st.number_input(f"TLV hàng mới HĐ{pos} (chỉ)", min_value=0.0, value=0.0, step=0.001, format="%.3f", key=f"n{rid}_tlv", help="Dùng khi đổi cùng nhóm tuổi vàng. Để 0 nếu chưa biết (app coi như TLV mới ≥ TLV cũ).")
         tlv = dec(t) if t > 0 else None
+    if group is None or value <= 0:
+        return None
     return NewItem(group, dec(value), tlv)
 
 
@@ -225,36 +275,50 @@ def render_result(result, case: Case) -> None:
 
 
 def tab_calc() -> None:
-    txn_date, txn_time, is_hub, prices = sidebar()
+    init_rows()
+    txn_date, txn_time, is_hub, prices, cond = sidebar()
     docs = matrix.documents()
 
-    st.markdown("#### 1. Điều kiện giao dịch")
-    c = st.columns(3)
-    same_customer = c[0].checkbox("Mã khách hàng trên Bảng kê trùng mã trên HĐ mới", value=True, key="same_cust")
-    intact = c[1].checkbox("Sản phẩm nguyên hiện trạng", value=True, key="intact")
-    papers = c[2].checkbox("Khách có đủ chứng từ (HĐ PNJ, chính sách bán hàng, giấy giám định nếu có)", value=True, key="papers")
-    if not intact:
+    left, right = st.columns(2, gap="large")
+    old_items: list[OldItem | None] = []
+    with left:
+        st.markdown("### 🛍️ 1. Hàng cũ thu đổi / mua lại (Bảng kê)")
+        for pos, rid in enumerate(st.session_state.old_ids, start=1):
+            item, picked = old_row(pos, rid, txn_date)
+            old_items.append(item if picked else None)
+        st.button("➕ Thêm món cũ (BK)", key="old_add", on_click=add_row, args=("old", OLD_LIMIT), disabled=len(st.session_state.old_ids) >= OLD_LIMIT)
+        total_old = sum((dec(st.session_state.get(f"o{rid}_inv", 0)) for rid in st.session_state.old_ids), Decimal(0))
+        st.caption("TỔNG GIÁ TRỊ HÀNG CŨ (BK):")
+        st.markdown(f"## {vnd_big(total_old)}")
+    new_items: list[NewItem] = []
+    with right:
+        st.markdown("### 🛒 2. Hàng mới khách mua (Hóa đơn)")
+        for pos, rid in enumerate(st.session_state.new_ids, start=1):
+            n = new_row(pos, rid)
+            if n:
+                new_items.append(n)
+        st.button("➕ Thêm món mới (HĐ)", key="new_add", on_click=add_row, args=("new", NEW_LIMIT), disabled=len(st.session_state.new_ids) >= NEW_LIMIT)
+        total_new = sum((dec(st.session_state.get(f"n{rid}_value", 0)) for rid in st.session_state.new_ids), Decimal(0))
+        st.caption("TỔNG GIÁ TRỊ HÀNG MỚI (HĐ):")
+        st.markdown(f"## {vnd_big(total_new)}")
+    st.caption("Không có món hàng mới (hoặc để trống) nghĩa là khách chỉ bán lại.")
+
+    if not cond["intact"]:
         st.error("Sản phẩm không nguyên hiện trạng: A2 mục 3 có công thức riêng theo từng trường hợp (mất đá, mất chi tiết, hao hụt, biến dạng, thiếu dấu mộc). App chưa tự tính; xem tab Quy trình hoặc chuyển P.TL&ĐBCL. Kết quả bên dưới chỉ để tham khảo cho phần nguyên hiện trạng.")
-    if not papers:
+    if not cond["papers"]:
         st.warning("Thiếu chứng từ: nếu nhận diện được là hàng PNJ thì xử lý theo từng trường hợp; một số dòng hàng ghi rõ không thu mua khi thiếu chứng từ.")
 
-    st.markdown("#### 2. Hàng cũ khách mang đến")
-    n_old = st.number_input("Số món hàng cũ", min_value=1, max_value=6, value=1, step=1, key="n_old")
-    items = [old_item_form(i, txn_date, prices) for i in range(int(n_old))]
-
-    st.markdown("#### 3. Hàng mới khách mua")
-    st.caption("Để 0 dòng nếu khách chỉ bán lại và không mua sản phẩm mới.")
-    n_new = st.number_input("Số dòng hàng mới", min_value=0, max_value=4, value=1, step=1, key="n_new")
-    new_items = [new_item_form(i) for i in range(int(n_new))]
-
     st.divider()
-    if any(i is None for i in items):
-        st.warning("Có món hàng cũ chưa xác định được dòng hàng. Hoàn tất thông tin trước khi tính.")
+    if not old_items:
+        st.info("Chưa có món hàng cũ. Bấm “Thêm món cũ (BK)” để bắt đầu.")
         return
-    if any(i.inv_value <= 0 for i in items):
+    if any(i is None for i in old_items):
+        st.info("Chọn nhóm hàng cho từng món hàng cũ (và hoàn tất chi tiết ở nút ⚙️ nếu cần) để xem kết quả.")
+        return
+    if any(i.inv_value <= 0 for i in old_items):
         st.info("Nhập giá trị theo hóa đơn của từng món hàng cũ để xem kết quả.")
         return
-    case = Case(old=items, new=new_items, txn_date=txn_date, same_customer=same_customer, prices=prices, is_hub=is_hub, txn_time=txn_time)
+    case = Case(old=old_items, new=new_items, txn_date=txn_date, same_customer=cond["same_customer"], prices=prices, is_hub=is_hub, txn_time=txn_time)
     try:
         result = evaluate(case)
     except ValueError as exc:
